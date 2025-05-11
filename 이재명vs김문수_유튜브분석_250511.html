@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>정치 이슈별 유튜브 여론 반응 분석 보고서</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #f9f9f9;
+            color: #333;
+            font-size: 10pt;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.05);
+            padding: 30px;
+            border-radius: 8px;
+        }
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #1a4e8e;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+        }
+        .header h1 {
+            color: #1a4e8e;
+            font-size: 24pt;
+            font-weight: 700;
+            margin: 0;
+            letter-spacing: -0.5px;
+        }
+        .header p {
+            font-size: 10pt;
+            color: #565657;
+            margin: 8px 0 0;
+        }
+        h1 {
+            color: #1a4e8a;
+            font-size: 18pt;
+            font-weight: 700;
+            margin-top: 2rem;
+            padding-bottom: 0.3rem;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        h2 {
+            color: #2c3e50;
+            font-size: 16pt;
+            font-weight: 500;
+            margin-top: 1.5rem;
+        }
+        h3 {
+            color: #34495e;
+            font-size: 14pt;
+            font-weight: 500;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 9pt;
+            margin-bottom: 1.5rem;
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+        }
+        table a {
+            text-decoration: none;
+            color: #1a4e8e;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+        table a:hover {
+            color: #f56b25;
+            text-decoration: underline;
+        }
+        th, td {
+            border: none;
+            padding: 10px 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #e8f0fd;
+            color: #1a4e8e;
+            font-weight: 500;
+            position: relative;
+            letter-spacing: -0.5px;
+        }
+        th:after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, #1a4e8e, transparent);
+        }
+        td {
+            border-bottom: 1px solid #eaecef;
+        }
+        tr:nth-child(even) {
+            background-color: #f8fafc;
+        }
+        tr:hover {
+            background-color: #f0f4f8;
+        }
+        td.col2, th.col2 {
+            background-color: #fffaeb;
+        }
+        .summary-box {
+            background-color: #f0f7ff;
+            padding: 18px;
+            border-left: 5px solid #3273dc;
+            margin: 1.2rem 0;
+            white-space: pre-line;
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            line-height: 1.7;
+        }
+        b {
+            color: #1a4e8a;
+            font-weight: 600;
+        }
+        strong {
+            color: #f56b25;
+            font-weight: 600;
+        }
+        .overview {
+            background-color: #f6f9fe;
+            border-left: 3px solid #1a4e8e;
+            padding: 0.8rem 1rem;
+            margin-bottom: 1rem;
+            font-size: 11pt;
+            border-radius: 4px;
+        }
+        .overview p {
+            color: #f56b25;
+            font-size: 12pt;
+            font-weight: 600;
+            margin: 0.5rem 0;
+        }
+        .flex-container {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin: 1rem 0;
+        }
+        .flex-item {
+            flex: 1;
+            min-width: 300px;
+        }
+        .special-box {
+            background-color: #fffcf0;
+            border: 1px solid #ffeeba;
+            padding: 15px;
+            margin: 0.8rem 0;
+            font-size: 10pt;
+            border-radius: 6px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .special-box:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .special-box p {
+            color: #f56b25;
+            font-size: 11pt;
+            font-weight: 600;
+            margin: 0 0 0.6rem 0;
+        }
+        .special-box li {
+            margin-bottom: 0.5rem;
+            list-style-type: none;
+            position: relative;
+            padding-left: 1.2rem;
+        }
+        .special-box li:before {
+            content: "•";
+            color: #f56b25;
+            position: absolute;
+            left: 0;
+            font-weight: bold;
+        }
+        li {
+            margin-bottom: 0.4rem;
+            line-height: 1.6;
+        }
+        
+        /* 데이터 시각화 테이블 스타일 */
+        table.dataframe {
+            border: none;
+            font-size: 9pt;
+        }
+        table.dataframe th {
+            background-color: #edf2fb;
+            color: #2c3e50;
+            font-weight: 500;
+            text-align: center;
+            padding: 10px;
+        }
+        table.dataframe td {
+            text-align: center;
+            padding: 8px 10px;
+        }
+        table.dataframe tr:nth-child(even) {
+            background-color: #f8fafc;
+        }
+        /* 밝은 색으로 강조된 값 */
+        table.dataframe td:nth-child(1) {
+            font-weight: 500;
+            color: #2c3e50;
+        }
+        /* 감성/프레임 매트릭스용 색상 */
+        table.dataframe td:nth-child(2) {
+            background-color: rgba(46, 204, 113, 0.1);
+        }
+        table.dataframe td:nth-child(3) {
+            background-color: rgba(52, 152, 219, 0.1);
+        }
+        table.dataframe td:nth-child(4) {
+            background-color: rgba(231, 76, 60, 0.1);
+        }
+        /*차트 시각회*/
+        .chart-container {
+            max-width: 100%; /* 800px 고정 대신 최대 너비를 100%로 설정 */
+            width: 100%;
+            overflow-x: auto;
+            height: auto; /* 고정 높이 대신 자동 높이 설정 */
+            min-height: 400px; /* 최소 높이 설정 */
+            margin: 0 auto;
+        }
+     </style>
+</head>
+
+<body>
+   <div class="container">
+    <div class="header">
+      <h1>'이재명 VS 김문수' 유튜브 여론 반응 분석 보고서</h1>
+       <p>작성일 : 2025년 5월 11일 20:00 | 데이터 기준일 : 5월 11일 14:00 기준 최신 후보별 유튜브 최신 영상 50개</p>
+   </div>
+   
+    <div class="flex-container">
+      <div class="flex-item">
+          <div class="special-box">
+             <b><p>추출 키워드#1</p></b>
+            <li>키워드 : <strong>"이재명" + "전남" + "방문"</strong></li>
+            <li>이벤트 : '사법 리스크'를 극복한 이재명 더불어민주당 대선 후보가 5월 11일 전남지역을 방문해 지역민을 만나 지지를 당부했다.</li>
+          </div>
+      </div>  
+      <div class="flex-item">
+          <div class="special-box">
+            <b><p>추출 키워드#2</p></b>
+            <li>키워드 : <strong>"김문수" + "후보" + "등록"</strong></li>
+            <li>이벤트 : 당 지도부의 사퇴 압박을 이긴 김문수 국민의힘 대선 후보가 5월 11일 당 공식 후보로 등록을 마쳤다.</li>
+          </div>
+      </div>    
+   </div>
+    
+    <h1>1. 유튜브 정량 분석 결과</h1>
+     <div class="flex-container">
+       <div class="flex-item">
+            <table>
+            <thead>
+                <tr>
+                    <th>분석 지표</th>
+                    <th>이재명 키워드 영상</th>
+                    <th>김문수 키워드 영상</th>
+                    <th>분석 결과</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>영상 수</td>
+                    <td><b>35</b></td>
+                    <td><b>35</b></td>
+                    <td>분석에 사용된 영상 수는 동일</td>
+                </tr>
+                <tr>
+                    <td>전체 댓글 수</td>
+                    <td><b>988</b></td>
+                    <td>766</td>
+                    <td>'이재명 영상'이 상대적으로 높음 → 수용자 참여도(댓글량)에서 이재명이 앞서는 결과</td>
+                </tr>
+                <tr>
+                    <td>평균 댓글 길이</td>
+                    <td><b>37.14</b></td>
+                    <td>34.41</td>
+                    <td>'이재명 영상'이 상대적으로 높음 → 맥락이 있는 댓글을 다는 경향이 높음</td>
+                </tr>
+                <tr>
+                    <td>평균 댓글 수(영상별)</td>
+                    <td><b>28.09</b></td>
+                    <td>21.80</td>
+                    <td>'이재명 영상'이 더 활발함 → 영상 1개당 댓글 참여도 반영</td>
+                </tr>
+                <tr>
+                    <td>평균 조회수</td>
+                    <td>35,405.97</td>
+                    <td><b>44,798.63</b></td>
+                    <td>'김문수 영상'이 우세 → 콘텐츠의 수용자 도달 범주에서는 김문수가 우세</td>
+                </tr>
+                <tr>
+                    <td>평균 좋아요 수</td>
+                    <td><b>2,342.53</b></td>
+                    <td>1,090.67</td>
+                    <td>'이재명 영상'이 더 긍정적 반응 유도</td>
+                </tr>
+                <tr>
+                    <td>평균 댓글 수(메타 기준)</td>
+                    <td><b>111.06</b></td>
+                    <td>40.19</td>
+                    <td>'이재명 영상'이 더 많음 → 유튜브 기준 댓글 반응량(공식 통계 기준)에서 이재명이 높음</td>
+                </tr>
+            </tbody>
+        </table>
+       </div>
+ 
+      <div class="flex-item">
+           <div class="summary-box">
+           <p><b>정량 분석 결과 NOTE!</b></p>
+              '이재명 영상'과 '김문수 영상'의 유튜브 통계를 비교해보면,
+              <li><strong>이재명</strong>이 <strong>평균 조회수</strong>는 35,405.97회로 김문수의 44,798.63회보다 <strong>낮지만,
+              평균 좋아요 수</strong>는 2,342.53건으로 김문수의 1,090.67건보다 <strong>많습니다.</strong></li>
+              <li>이재명의 평균 댓글 수(메타 기준)는 111.06건으로 김문수의 40.19건보다 훨씬 많은 반면,
+              김문수의 평균 댓글 수(영상별)는 21.8건으로 이재명의 28.09건보다 적습니다.</li>
+              <li>이를 통해 <strong>'이재명 영상'</strong>이 더 많은 관심과 참여를 유도하는 <strong>'참여유도형'</strong>이며,
+              <strong>'김문수 영상'</strong>은 더 많은 영상 수를 업로드하거나 조회하는 <strong>'적극도달형'</strong>으로 해석될 수 있습니다.</li>
+        </div>
+     </div> 
+   </div>   
+    
+    <h1>2. 유튜브 댓글수 비교 테이블</h1>
+        <p style="text-align: right;">*'대표 댓글'은 '좋아요'가 가장 많은 1, 2위 댓글임</p>    
+     <div class="flex-container">
+      <div class="flex-item">
+         <h3>2.1. 이재명 영상 - 댓글수 TOP 5</h3>
+            <table style='table-layout: fixed; word-wrap: break-word;'>
+            <thead><tr><th style='width:30%'>제목</th><th>채널명</th><th>댓글 수</th><th>대표 댓글 ①</th><th>대표 댓글 ②</th></tr></thead>
+            <tbody>
+            <tr><td><a href='https://www.youtube.com/watch?v=jCw1Hx5zIJU' target='_blank'>[현장영상] "좀 더 생각정리 필요, 다만" '파격 공약' 이재명 밝힌 입장 / JTBC News</a></td><td>JTBC News</td><td>1,393.0</td><td>"김현종 외교특보가 한국의지도자는 유능해서는 안된다고 매우 유능해야한다고 했다."</td><td>"이재명후보님..차기대통령..응원하고 지지합니다!!!!!"</td></tr>
+            <tr><td><a href='https://www.youtube.com/watch?v=YU1BPf-6S2c' target='_blank'>이재명, 무안공항 방문해 유족 위로…"최선 다할 것" / 연합뉴스TV (YonhapnewsTV)</a></td><td>연합뉴스TV</td><td>505.0</td><td><strong>"응 무안에 국제공항 안된다고 다 그랬는데 <br>민주당이 허가함
+            이거야말로 사람 죽여놓고 '미안해'"</strong></td><td><strong>"저기에 허가 내준 너가 범인이다"</strong></td></tr>
+            <tr><td><a href='https://www.youtube.com/watch?v=0Cn60NZIees' target='_blank'>이재명 대통령(진) 나주도착!농업기술원 입장ㅎ</a></td><td>황기자</td><td>367.0</td><td>"사랑합니다.
+            존경합니다. 응원합니다. <br><br>살아주셔서 감사합니다."</td><td>"든든합니다"</td></tr>
+            <tr><td><a href='https://www.youtube.com/watch?v=zpN7_a5Fzwc' target='_blank'>[#이재명 LIVE] 민주주의의 심장, 호남에서 여는 진짜 대한민국</a></td><td>이재명</td><td>345.0</td><td>"이제는 정말 이재명 대통령님!"</td><td>"호남당원분들 감사합니다. <br>이재명님 대통령나라예서 살아야합니다~~~~~~"</td></tr>
+            <tr><td><a href='https://www.youtube.com/watch?v=EXB8LVGhIn8' target='_blank'>국민의힘, 또 헌재 '항의 방문', "이재명과 문형배 친했다" #shorts</a></td><td>KBC 뉴스</td><td>212.0</td><td>"기피나 제척사유 명백하다
+            그야말로 헌재 개판이다"</td><td>"옳은말씀입니다"</td></tr>
+            </tbody></table>
+      </div> 
+    
+      <div class="flex-item">
+          <h3>2.2. 김문수 영상 - 댓글수 TOP 5</h3>
+            <table style='table-layout: fixed; word-wrap: break-word;'>
+            <thead><tr><th style='width:30%'>제목</th><th>채널명</th><th>댓글 수</th><th>대표 댓글 ①</th><th>대표 댓글 ②</th></tr></thead>
+            <tbody>
+            <tr><td><a href='https://www.youtube.com/watch?v=x_nEXHezUvc' target='_blank'>후보등록 마친 김문수,긴급입장문!김,지금 한덕수 전격회동-선대위원장 제안!!한덕수,적극협력의지 표명!신임 사무총장엔 4선 박대출의원!</a></td><td>전옥현 안보정론TV</td><td>313.0</td><td>"한덕수총리님... 애국하시는 모습을 국민들이 기억하고 역사의 중요한 총리님으로남으시길 기도합니다"</td><td>"권성동 자진탈당해야"</td></tr>
+            <tr><td><a href='https://www.youtube.com/watch?v=Xv9gWBmc8AI' target='_blank'>[현장연결] 국민의힘 김문수 직접 후보 등록…"반드시 당선돼 위대한 나라 만들 것" / 연합뉴스TV (YonhapnewsTV)</a></td><td>연합뉴스TV</td><td>157.0</td><td>"갓문수였네 사람이 완전 커보이고 달리보이네요"</td><td>"김문수후보님 꼭 대통령도셔서 위대하고 살기좋은 자유대한민국 만들어주세요."</td></tr>
+            <tr><td><a href='https://www.youtube.com/watch?v=gyQzks9Vmp4' target='_blank'>김문수 '기호 2번' 후보 등록...텃밭 향하는 이재명 / YTN</a></td><td> YTN</td><td>103.0</td><td>이준석 성상납 은폐 노하우 태크닉 부탁합니다.</td><td>쌍권 들은 사퇴해라. 자격 없다.</td></tr>
+            <tr><td><a href='https://www.youtube.com/watch?v=lYeFXQs1sqw' target='_blank'>후보 등록 마친 김문수 "위대한 나라 만드는 데 최선 다하겠다"</a></td><td>오마이TV</td><td>96.0</td><td><strong>"정당한 권리 다시 찾은 건 축하드리는데.
+            글쎄... 사이비 종교인하고 붙어먹은 사람을 대통령으로?"</strong></td><td>"도와주셔서 감사합니다 위대한 대한민국 국민과 이재명 대통령이 만들겠습니다"</td></tr>
+            <tr><td><a href='https://www.youtube.com/watch?v=xZQkUclQyMY' target='_blank'>김문수 후보 등록 완료 승리 하겠다!</a></td><td>냥냥사랑</td><td>88.0</td><td>"김문수대통령당선예감입니다. 응원 열심히 하겠습니다."</td><td>"김문수 님  이제부터  이죄명 처럼  악랄 하게   운동하십시요..힘내십시요"</td></tr>
+            </tbody></table>
+      </div>  
+    </div>
+ 
+    <h2>3. 유튜브 영상의 '감성' 분석 비교</h2>
+    <div class="flex-container">
+        <div class="flex-item">
+            <h3>3.1. '이재명 영상' 감성 분석 결과</h3>
+            <table>
+              <thead>
+              <tr><th>감성</th><th>비율(%)</th></tr>
+              </thead>
+              <tbody>
+              <tr><td>긍정</td><td>61.2%</td></tr>
+              <tr><td>중립</td><td>21.5%</td></tr>
+              <tr><td>부정</td><td>17.3%</td></tr>
+              </tbody>
+            </table>
+
+            <div class="summary-box">
+                <b>'이재명' 분석 요약:</b>
+                <b>전체 댓글의 약 61.2%가 긍정적 감성</b>으로 분류되어, 이재명 후보에 대한 우호적 정서가 유튜브에서도 뚜렷하게 나타났습니다.
+                예를 들어, 후보 본인에 대한 감성 표현이 많았으며 <b>"살아주셔서 감사합니다", "든든합니다"</b>는 감성적으로 깊은 지지를 표현합니다.
+                반면, 부정 감성은 17.3%에 불과하며, 중립 의견은 21.5% 수준으로 확인됩니다.
+            </div>
+        </div>
+
+        <div class="flex-item">
+            <h3>3.2. '김문수 영상' 감성 분석 결과</h3>
+              <table>
+                <thead>
+                  <tr><th>감성</th><th>비율(%)</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td>부정</td><td>59.0%</td></tr>
+                  <tr><td>긍정</td><td>33.0%</td></tr>
+                  <tr><td>중립</td><td>8.0%</td></tr>
+                </tbody>
+              </table>
+
+            <div class="summary-box">
+              <b>'김문수' 분석 요약:</b>
+              <b>전체 댓글의 약 59.0%가 부정 감성</b>으로 분류되어, 비판적·우려 중심의 정서가 절반 이상을 차지한 것으로 나타났습니다.
+              다만, 부정 댓글은 <b>"권성동 자진탈당해야", "쌍권 들은 사퇴해라"</b> 등 당내 갈등에 대한 공격적 표현이 영향을 미쳤습니다.
+              긍정은 33.0%로, <b>"갓문수였네", "기대하고 있습니다" 등 후보에 대한 응원</b>도 확인됩니다.
+            </div>
+        </div>
+    </div>
+
+    <h2>4. 유튜브 여론 프레임 분석 비교</h2>
+    <div class="flex-container">
+        <div class="flex-item">
+            <h3>4.1. '이재명 영상' 프레임 분석 결과</h3>
+            <table>
+              <thead>
+              <tr><th>프레임</th><th>비율(%)</th></tr>
+              </thead>
+              <tbody>
+              <tr><td>지지</td><td>49.8%</td></tr>
+              <tr><td>비판</td><td>18.0%</td></tr>
+              <tr><td>조롱</td><td>5.2%</td></tr>
+              <tr><td>정보</td><td>14.0%</td></tr>
+              <tr><td>기타</td><td>13.0%</td></tr>
+              </tbody>
+            </table>
+
+            <div class="summary-box">
+                    <b>프레임 분석 요약:</b>
+                    가장 큰 비중의 프레임은 <b>'지지'(49.8%)</b>이며, 지지층의 정치적 지향을 반영했습니다.
+                    예시로 "이재명 대통령 되셔야 합니다", "응원합니다" 등 확신형 발언이 많았습니다.
+                    '비판'(18.0%)이나 '조롱'(5.2%) 정도이나 일부 영상에서는 반대 성향이 강하게 포착됩니다.
+              </div>
+        </div>         
+
+        <div class="flex-item">
+            <h3>4.2. 김문수 프레임 분석 결과</h3>
+             <table>
+              <thead>
+                <tr><th>프레임</th><th>비율(%)</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>비판</td><td>50.0%</td></tr>
+                <tr><td>지지</td><td>31.0%</td></tr>
+                <tr><td>정보</td><td>7.0%</td></tr>
+                <tr><td>조롱</td><td>7.0%</td></tr>
+                <tr><td>기타</td><td>5.0%</td></tr>
+              </tbody>
+            </table>  
+              
+              <div class="summary-box">
+                  <b>프레임 분석 요약:</b>
+                  <b>비판 프레임이 50%</b>이나, 이는 후보 개인보다 당내 갈등과 연결될 수 있습니다.
+                  지지 프레임은 31.0%로, 일부 충성도 높은 팬덤의 존재도 드러납니다.
+                  정보·조롱 프레임이 각각 7%로 나타나며, 냉소적·풍자적 댓글도 확인됩니다.
+              </div>
+        </div>
+    </div>
+
+    <h2>5. 감성 × 프레임 매트릭스</h2>
+
+    <div class="summary-box">
+      <b>TIP!</b>
+      <li>감성 X 프레임 매트릭스는 댓글의 <b>감정(긍정/중립/부정)</b>과 <b>프레임(지지/비판/정보 등)</b>을 <b>교차 분석</b>한 결과입니다.</li>
+      <li>매트릭스는 단순한 여론의 강도뿐 아니라, <b>어떤 감정이 어떤 프레임과 결합되었는지</b>를 정밀하게 파악할 수 있도록 돕습니다. </li>
+      <li>예를 들어, <b>'이재명 영상'의 경우 '긍정-지지 조합'</b>이 뚜렷하고, <b>'김문수 영상'은 '부정-비판'</b>이 주를 이뤄 <b>메시지 수용 구조의 질적 차이</b>를 엿보이게 합니다.
+    </div>
+
+      <div class="flex-container">
+        <div class="flex-item">
+            <h3>5.1. 이재명 - 프레임별 감성 분포</h3>
+            <div class="chart-container">
+                <canvas id="leeChart"></canvas>
+            </div>
+        </div>
+        
+        <div class="flex-item">
+            <h3>5.2. 김문수 - 프레임별 감성 분포</h3>
+            <div class="chart-container">
+                <canvas id="kimChart"></canvas>
+            </div>
+        </div>      
+      </div>
+       
+      <div class="flex-container">
+        <div class="flex-item">
+            <h3>5.3. 이재명 - 감성별 프레임 분포</h3>
+            <div class="chart-container">
+                <canvas id="leeSentimentChart"></canvas>
+            </div>
+        </div>
+
+        <div class="flex-item">
+             <h3>5. 4김문수 - 감성별 프레임 분포</h3>
+            <div class="chart-container">
+            <canvas id="kimSentimentChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+      <h2>6. 결론: '이재명 유튜브 VS 김문수 유튜브' 분석 총론</h2>
+    <div class="special-box">
+      <li>이번 분석에서 이재명 후보 관련 유튜브 영상은 전반적으로 <strong>긍정적 감성과 지지 프레임</strong>이 강하게 나타났으며, 팬덤 기반과 지지자들의 적극적 참여가 눈에 띄었습니다.
+      </li>
+      <li>반면 김문수 후보 관련 영상에서는 부정 감성과 비판 프레임이 두드러졌습니다. 일부 열성적 지지 댓글이 존재하나, <strong>전반적 반응은 비판적 경향</strong>이 더 강했습니다. 다만 <strong>
+     이는 당내 혼란 상황에 대한 비판 여론과 무관하지 않아</strong> 보입니다. 이에 향후 '갈등 수습' 정도 등에 따라 변화 가능성도 없지 않습니다.
+      </li>
+      <li>정량 데이터와 감성-프레임 교차 매트릭스를 함께 보면, <strong>정치인별 유튜브 커뮤니케이션 반응의 질적 차이</strong>가 뚜렷하게 나타납니다.
+      </li>
+    </div>
+
+</body>
+</html>
+  
+  <script>
+    // 이재명 데이터
+    const leeData = {
+      labels: ['지지', '조언', '정보', '조롱', '비평', '비판', '기타'],
+      datasets: [
+        {
+          label: '긍정',
+          data: [90.5, 2.4, 4.8, 2.4, 0.0, 0.0, 0.0],
+          backgroundColor: 'rgba(76, 175, 80, 0.7)',
+          borderColor: 'rgba(76, 175, 80, 1)',
+          borderWidth: 1
+        },
+        {
+          label: '중립',
+          data: [0.0, 0.0, 33.3, 0.0, 0.0, 0.0, 66.7],
+          backgroundColor: 'rgba(33, 150, 243, 0.7)',
+          borderColor: 'rgba(33, 150, 243, 1)',
+          borderWidth: 1
+        },
+        {
+          label: '부정',
+          data: [5.5, 0.0, 1.8, 0.0, 3.6, 89.1, 0.0],
+          backgroundColor: 'rgba(244, 67, 54, 0.7)',
+          borderColor: 'rgba(244, 67, 54, 1)',
+          borderWidth: 1
+        }
+      ]
+    };
+
+    // 이재명 차트 생성
+    const leeCtx = document.getElementById('leeChart').getContext('2d');
+    const leeChart = new Chart(leeCtx, {
+      type: 'bar',
+      data: leeData,
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          title: {
+            display: false,
+          },
+          legend: {
+            position: 'top',
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return `${context.dataset.label}: ${context.raw}%`;
+              }
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            title: {
+              display: true,
+              text: '백분율(%)'
+            }
+          },
+          x: {
+            title: {
+              display: true,
+              text: '프레임'
+            }
+          }
+        }
+      }
+    });
+  </script>
+  
+  
+  <script>
+    // 김문수 데이터
+    const kimData = {
+      labels: ['지지', '조언', '정보', '조롱', '비평', '비판', '기타', '기대'],
+      datasets: [
+        {
+          label: '긍정',
+          data: [81.8, 0.0, 6.1, 9.1, 0.0, 0.0, 0.0, 3.0],
+          backgroundColor: 'rgba(76, 175, 80, 0.7)',
+          borderColor: 'rgba(76, 175, 80, 1)',
+          borderWidth: 1
+        },
+        {
+          label: '중립',
+          data: [25.0, 0.0, 50.0, 12.5, 0.0, 0.0, 12.5, 0.0],
+          backgroundColor: 'rgba(33, 150, 243, 0.7)',
+          borderColor: 'rgba(33, 150, 243, 1)',
+          borderWidth: 1
+        },
+        {
+          label: '부정',
+          data: [3.4, 0.0, 1.7, 3.4, 6.8, 84.7, 0.0, 0.0],
+          backgroundColor: 'rgba(244, 67, 54, 0.7)',
+          borderColor: 'rgba(244, 67, 54, 1)',
+          borderWidth: 1
+        }
+      ]
+    };
+
+    // 김문수 차트 생성
+    const kimCtx = document.getElementById('kimChart').getContext('2d');
+    const kimChart = new Chart(kimCtx, {
+      type: 'bar',
+      data: kimData,
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          title: {
+            display: false,
+          },
+          legend: {
+            position: 'top',
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return `${context.dataset.label}: ${context.raw}%`;
+              }
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            title: {
+              display: true,
+              text: '백분율(%)'
+            }
+          },
+          x: {
+            title: {
+              display: true,
+              text: '프레임'
+            }
+          }
+        }
+      }
+    });
+  </script>
+
+ 
+  
+  <script>
+    // 이재명 감성별 데이터
+    const leeSentimentData = {
+      labels: ['긍정', '중립', '부정'],
+      datasets: [
+        {
+          label: '지지',
+          data: [90.5, 0.0, 5.5],
+          backgroundColor: 'rgba(136, 132, 216, 0.7)',
+          borderColor: 'rgba(136, 132, 216, 1)',
+          borderWidth: 1
+        },
+        {
+          label: '조언',
+          data: [2.4, 0.0, 0.0],
+          backgroundColor: 'rgba(131, 166, 237, 0.7)',
+          borderColor: 'rgba(131, 166, 237, 1)',
+          borderWidth: 1
+        },
+        {
+          label: '정보',
+          data: [4.8, 33.3, 1.8],
+          backgroundColor: 'rgba(141, 209, 225, 0.7)',
+          borderColor: 'rgba(141, 209, 225, 1)',
+          borderWidth: 1
+        },
+        {
+          label: '조롱',
+          data: [2.4, 0.0, 0.0],
+          backgroundColor: 'rgba(130, 202, 157, 0.7)',
+          borderColor: 'rgba(130, 202, 157, 1)',
+          borderWidth: 1
+        },
+        {
+          label: '비평',
+          data: [0.0, 0.0, 3.6],
+          backgroundColor: 'rgba(164, 222, 108, 0.7)',
+          borderColor: 'rgba(164, 222, 108, 1)',
+          borderWidth: 1
+        },
+        {
+          label: '비판',
+          data: [0.0, 0.0, 89.1],
+          backgroundColor: 'rgba(208, 237, 87, 0.7)',
+          borderColor: 'rgba(208, 237, 87, 1)',
+          borderWidth: 1
+        },
+        {
+          label: '기타',
+          data: [0.0, 66.7, 0.0],
+          backgroundColor: 'rgba(255, 198, 88, 0.7)',
+          borderColor: 'rgba(255, 198, 88, 1)',
+          borderWidth: 1
+        }
+      ]
+    };
+
+    // 이재명 감성별 차트 생성
+    const leeSentimentCtx = document.getElementById('leeSentimentChart').getContext('2d');
+    const leeSentimentChart = new Chart(leeSentimentCtx, {
+      type: 'bar',
+      data: leeSentimentData,
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          title: {
+            display: false,
+          },
+          legend: {
+            position: 'top',
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return `${context.dataset.label}: ${context.raw}%`;
+              }
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            title: {
+              display: true,
+              text: '백분율(%)'
+            }
+          },
+          x: {
+            title: {
+              display: true,
+              text: '감성'
+            }
+          }
+        }
+      }
+    });
+  </script>
+
+  
+  <script>
+    // 김문수 감성별 데이터
+    const kimSentimentData = {
+      labels: ['긍정', '중립', '부정'],
+      datasets: [
+        {
+          label: '지지',
+          data: [81.8, 25.0, 3.4],
+          backgroundColor: 'rgba(136, 132, 216, 0.7)',
+          borderColor: 'rgba(136, 132, 216, 1)',
+          borderWidth: 1
+        },
+        {
+          label: '정보',
+          data: [6.1, 50.0, 1.7],
+          backgroundColor: 'rgba(141, 209, 225, 0.7)',
+          borderColor: 'rgba(141, 209, 225, 1)',
+          borderWidth: 1
+        },
+        {
+          label: '조롱',
+          data: [9.1, 12.5, 3.4],
+          backgroundColor: 'rgba(130, 202, 157, 0.7)',
+          borderColor: 'rgba(130, 202, 157, 1)',
+          borderWidth: 1
+        },
+        {
+          label: '비평',
+          data: [0.0, 0.0, 6.8],
+          backgroundColor: 'rgba(164, 222, 108, 0.7)',
+          borderColor: 'rgba(164, 222, 108, 1)',
+          borderWidth: 1
+        },
+        {
+          label: '비판',
+          data: [0.0, 0.0, 84.7],
+          backgroundColor: 'rgba(208, 237, 87, 0.7)',
+          borderColor: 'rgba(208, 237, 87, 1)',
+          borderWidth: 1
+        },
+        {
+          label: '기타',
+          data: [0.0, 12.5, 0.0],
+          backgroundColor: 'rgba(255, 198, 88, 0.7)',
+          borderColor: 'rgba(255, 198, 88, 1)',
+          borderWidth: 1
+        },
+        {
+          label: '기대',
+          data: [3.0, 0.0, 0.0],
+          backgroundColor: 'rgba(255, 128, 66, 0.7)',
+          borderColor: 'rgba(255, 128, 66, 1)',
+          borderWidth: 1
+        }
+      ]
+    };
+
+    // 김문수 감성별 차트 생성
+    const kimSentimentCtx = document.getElementById('kimSentimentChart').getContext('2d');
+    const kimSentimentChart = new Chart(kimSentimentCtx, {
+      type: 'bar',
+      data: kimSentimentData,
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          title: {
+            display: false,
+          },
+          legend: {
+            position: 'top',
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return `${context.dataset.label}: ${context.raw}%`;
+              }
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            title: {
+              display: true,
+              text: '백분율(%)'
+            }
+          },
+          x: {
+            title: {
+              display: true,
+              text: '감성'
+            }
+          }
+        }
+      }
+    });
+  </script>
+</body>
+</html>

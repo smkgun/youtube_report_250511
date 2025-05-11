@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>감성X메트릭스 분석</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    .chart-container {
+      position: relative;
+      height: 400px;
+      margin-bottom: 30px;
+    }
+    .controls {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+    .controls label {
+      font-weight: bold;
+      margin-right: 5px;
+    }
+    h1, h2 {
+      text-align: center;
+      color: #333;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: center;
+    }
+    th {
+      background-color: #f2f2f2;
+    }
+    tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>감성 X 메트릭스 분석</h1>
+    
+    <div class="controls">
+      <div>
+        <label for="politician-select">정치인:</label>
+        <select id="politician-select">
+          <option value="이재명">이재명</option>
+          <option value="김문수">김문수</option>
+        </select>
+      </div>
+      
+      <div>
+        <label for="view-type-select">보기 방식:</label>
+        <select id="view-type-select">
+          <option value="byFrame">프레임별 감성</option>
+          <option value="bySentiment">감성별 프레임</option>
+        </select>
+      </div>
+    </div>
+    
+    <div class="chart-container">
+      <canvas id="myChart"></canvas>
+    </div>
+    
+    <h2>데이터 테이블</h2>
+    <div id="table-container"></div>
+  </div>
+  
+  <script>
+    // 데이터 정의
+    const politiciansData = {
+      "이재명": {
+        frames: {
+          "지지": { "긍정": 90.5, "중립": 0.0, "부정": 5.5 },
+          "조언": { "긍정": 2.4, "중립": 0.0, "부정": 0.0 },
+          "정보": { "긍정": 4.8, "중립": 33.3, "부정": 1.8 },
+          "조롱": { "긍정": 2.4, "중립": 0.0, "부정": 0.0 },
+          "비평": { "긍정": 0.0, "중립": 0.0, "부정": 3.6 },
+          "비판": { "긍정": 0.0, "중립": 0.0, "부정": 89.1 },
+          "기타": { "긍정": 0.0, "중립": 66.7, "부정": 0.0 }
+        }
+      },
+      "김문수": {
+        frames: {
+          "지지": { "긍정": 81.8, "중립": 25.0, "부정": 3.4 },
+          "조언": { "긍정": 0.0, "중립": 0.0, "부정": 0.0 },
+          "정보": { "긍정": 6.1, "중립": 50.0, "부정": 1.7 },
+          "조롱": { "긍정": 9.1, "중립": 12.5, "부정": 3.4 },
+          "비평": { "긍정": 0.0, "중립": 0.0, "부정": 6.8 },
+          "비판": { "긍정": 0.0, "중립": 0.0, "부정": 84.7 },
+          "기타": { "긍정": 0.0, "중립": 12.5, "부정": 0.0 },
+          "기대": { "긍정": 3.0, "중립": 0.0, "부정": 0.0 }
+        }
+      }
+    };
+
+    // 색상 정의
+    const sentimentColors = {
+      "긍정": "rgba(76, 175, 80, 0.7)",  // 녹색
+      "중립": "rgba(33, 150, 243, 0.7)",  // 파란색
+      "부정": "rgba(244, 67, 54, 0.7)"   // 빨간색
+    };
+
+    // 무작위 색상 생성
+    function getRandomColor() {
+      const letters = '0123456789ABCDEF';
+      let color = '#';
+      for (let i = 0; i < 6; i++) {
+        color += letters[Math.floor(Math.random() * 16)];
+      }
+      return color;
+    }
+
+    // 프레임별 색상 생성
+    function getFrameColors(politician) {
+      const frameKeys = Object.keys(politiciansData[politician].frames);
+      const colors = [
+        "rgba(136, 132, 216, 0.7)",
+        "rgba(131, 166, 237, 0.7)",
+        "rgba(141, 209, 225, 0.7)",
+        "rgba(130, 202, 157, 0.7)",
+        "rgba(164, 222, 108, 0.7)",
+        "rgba(208, 237, 87, 0.7)",
+        "rgba(255, 198, 88, 0.7)",
+        "rgba(255, 128, 66, 0.7)"
+      ];
+      
+      const frameColors = {};
+      frameKeys.forEach((frame, index) => {
+        frameColors[frame] = colors[index % colors.length];
+      });
+      
+      return frameColors;
+    }
+
+    // 그래프 생성
+    let myChart;
+    function createChart() {
+      const politicianSelect = document.getElementById('politician-select');
+      const viewTypeSelect = document.getElementById('view-type-select');
+      
+      const selectedPolitician = politicianSelect.value;
+      const viewType = viewTypeSelect.value;
+      
+      // 데이터 준비
+      let chartData;
+      let chartLabels;
+      let datasets = [];
+      
+      if (viewType === 'byFrame') {
+        // 프레임별 감성 데이터
+        const frameKeys = Object.keys(politiciansData[selectedPolitician].frames);
+        chartLabels = frameKeys;
+        
+        const positiveData = [];
+        const neutralData = [];
+        const negativeData = [];
+        
+        frameKeys.forEach(frame => {
+          const sentiments = politiciansData[selectedPolitician].frames[frame];
+          positiveData.push(sentiments['긍정'] || 0);
+          neutralData.push(sentiments['중립'] || 0);
+          negativeData.push(sentiments['부정'] || 0);
+        });
+        
+        datasets = [
+          {
+            label: '긍정',
+            data: positiveData,
+            backgroundColor: sentimentColors['긍정'],
+            borderColor: 'rgba(76, 175, 80, 1)',
+            borderWidth: 1
+          },
+          {
+            label: '중립',
+            data: neutralData,
+            backgroundColor: sentimentColors['중립'],
+            borderColor: 'rgba(33, 150, 243, 1)',
+            borderWidth: 1
+          },
+          {
+            label: '부정',
+            data: negativeData,
+            backgroundColor: sentimentColors['부정'],
+            borderColor: 'rgba(244, 67, 54, 1)',
+            borderWidth: 1
+          }
+        ];
+      } else {
+        // 감성별 프레임 데이터
+        chartLabels = ['긍정', '중립', '부정'];
+        const sentimentData = { '긍정': {}, '중립': {}, '부정': {} };
+        const frameKeys = Object.keys(politiciansData[selectedPolitician].frames);
+        
+        frameKeys.forEach(frame => {
+          const sentiments = politiciansData[selectedPolitician].frames[frame];
+          Object.entries(sentiments).forEach(([sentiment, value]) => {
+            if (value > 0) {
+              if (!sentimentData[sentiment][frame]) {
+                sentimentData[sentiment][frame] = 0;
+              }
+              sentimentData[sentiment][frame] = value;
+            }
+          });
+        });
+        
+        const frameColors = getFrameColors(selectedPolitician);
+        
+        frameKeys.forEach(frame => {
+          const data = [
+            sentimentData['긍정'][frame] || 0,
+            sentimentData['중립'][frame] || 0,
+            sentimentData['부정'][frame] || 0
+          ];
+          
+          // 모든 값이 0이면 데이터셋 추가하지 않음
+          if (data.some(value => value > 0)) {
+            datasets.push({
+              label: frame,
+              data: data,
+              backgroundColor: frameColors[frame],
+              borderColor: frameColors[frame].replace('0.7', '1'),
+              borderWidth: 1
+            });
+          }
+        });
+      }
+      
+      // 차트 설정
+      const ctx = document.getElementById('myChart').getContext('2d');
+      
+      if (myChart) {
+        myChart.destroy();
+      }
+      
+      myChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: chartLabels,
+          datasets: datasets
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            x: {
+              stacked: false,
+              title: {
+                display: true,
+                text: viewType === 'byFrame' ? '프레임' : '감성'
+              }
+            },
+            y: {
+              beginAtZero: true,
+              title: {
+                display: true,
+                text: '백분율(%)'
+              }
+            }
+          },
+          plugins: {
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  return `${context.dataset.label}: ${context.raw}%`;
+                }
+              }
+            }
+          }
+        }
+      });
+      
+      // 테이블 생성
+      createTable(chartLabels, datasets, viewType);
+    }
+    
+    // 테이블 생성
+    function createTable(labels, datasets, viewType) {
+      const tableContainer = document.getElementById('table-container');
+      
+      // 테이블 HTML 생성
+      let tableHTML = '<table>';
+      
+      // 헤더 행
+      tableHTML += '<tr><th>' + (viewType === 'byFrame' ? '프레임' : '감성') + '</th>';
+      
+      for (const dataset of datasets) {
+        tableHTML += `<th>${dataset.label}</th>`;
+      }
+      
+      tableHTML += '</tr>';
+      
+      // 데이터 행
+      labels.forEach((label, index) => {
+        tableHTML += `<tr><td>${label}</td>`;
+        
+        if (viewType === 'byFrame') {
+          // 프레임별 감성 데이터
+          datasets.forEach(dataset => {
+            tableHTML += `<td>${dataset.data[index] > 0 ? dataset.data[index] + '%' : '-'}</td>`;
+          });
+        } else {
+          // 감성별 프레임 데이터
+          datasets.forEach(dataset => {
+            const value = dataset.data[index];
+            tableHTML += `<td>${value > 0 ? value + '%' : '-'}</td>`;
+          });
+        }
+        
+        tableHTML += '</tr>';
+      });
+      
+      tableHTML += '</table>';
+      
+      tableContainer.innerHTML = tableHTML;
+    }
+    
+    // 이벤트 리스너 등록
+    document.getElementById('politician-select').addEventListener('change', createChart);
+    document.getElementById('view-type-select').addEventListener('change', createChart);
+    
+    // 초기 차트 생성
+    window.onload = createChart;
+  </script>
+</body>
+</html>
