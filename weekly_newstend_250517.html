@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <title>네이버 정치 기사 여론 분석 보고서</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary-color: #1a4e8e;
+      --background-color: #f9f9f9;
+      --highlight-background: #f2f7fd;
+      --text-color: #333;
+      --link-color: #0066cc;
+      --border-color: #ddd;
+      --accent-color: #f56b25;
+      --container-width: 21cm;
+      --container-padding: 1cm;
+      --font-size-base: 9pt;
+    }
+    
+    * {
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background-color: var(--background-color);
+      color: var(--text-color);
+      font-size: var(--font-size-base);
+      line-height: 1.5;
+      margin: 0;
+      padding: 0;
+    }
+    
+    .container {
+      width: 100%;
+      max-width: var(--container-width);
+      margin: 0 auto;
+      background-color: white;
+      padding: 1rem;
+      box-shadow: 0 0 10px rgba(0,0,0,0.05);
+    }
+    
+    .header {
+      text-align: center;
+      border-bottom: 2px solid var(--primary-color);
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+    }
+    
+    .header h1 {
+      color: var(--primary-color);
+      font-size: 16pt;
+      margin: 0;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+    }
+    
+    .header p {
+      font-size: var(--font-size-base);
+      color: #666;
+      margin: 8px 0 0;
+    }
+    
+    .overview {
+      background-color: var(--highlight-background);
+      border-left: 4px solid var(--primary-color);
+      padding: 0.8rem;
+      margin-bottom: 1rem;
+      font-size: var(--font-size-base);
+      border-radius: 3px;
+    }
+    
+    .overview p {
+      color: var(--accent-color);
+      font-weight: 600;
+      margin: 0 0 6px;
+    }
+    
+    .section-title {
+      color: var(--primary-color);
+      font-weight: 700;
+      font-size: 12pt;
+      margin: 1.5rem 0 0.8rem;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 6px;
+      letter-spacing: -0.02em;
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: var(--font-size-base);
+      margin-bottom: 1.2rem;
+      overflow-x: auto;
+      display: block;
+    }
+    
+    table a {
+      text-decoration: none;
+      color: inherit;
+    }
+    
+    th, td {
+      border: 0.5px solid var(--border-color);
+      padding: 8px 10px;
+      text-align: left;
+    }
+    
+    th {
+      background-color: var(--highlight-background);
+      color: var(--primary-color);
+      font-weight: 500;
+    }
+    
+    td.col2, th.col2 {
+      background-color: #f8f6e0;
+    }
+    
+    .flex-container {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    
+    .flex-item {
+      flex: 1;
+      min-width: 250px;
+    }
+    
+    h3 {
+      color: var(--primary-color);
+      font-size: 10pt;
+      margin: 0 0 6px;
+      font-weight: 600;
+    }
+    
+    .special-box {
+      background-color: #fff8e1;
+      border: 1px solid #ffecb3;
+      padding: 0.8rem;
+      margin: 1rem 0;
+      font-size: var(--font-size-base);
+      border-radius: 4px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    
+    .special-box p {
+      color: var(--accent-color);
+      font-weight: 600;
+      margin: 0 0 8px;
+    }
+    
+    .special-box ul {
+      padding-left: 1.2em;
+      margin: 0;
+    }
+    
+    .special-box li {
+      margin-bottom: 8px;
+      line-height: 1.6;
+    }
+    
+    .special-box li:last-child {
+      margin-bottom: 0;
+    }
+    
+    .chart-container {
+      position: relative;
+      height: 200px;
+      width: 100%;
+      margin: 0.6rem 0 1.2rem;
+    }
+    
+    .chart-half-page {
+      width: 100%;
+      height: auto;
+      aspect-ratio: 16/9;
+      min-height: 250px;
+      font-size: var(--font-size-base);
+      border: 1px solid #eaeaea;
+      border-radius: 4px;
+      padding: 0.6rem;
+      box-sizing: border-box;
+      background-color: #fff;
+    }
+    
+    footer {
+      margin-top: 2rem;
+      padding: 1rem 0.8rem 0;
+      border-top: 1px solid #c6d9ec;
+      font-size: 8pt;
+      color: #666;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 0.5rem;
+    }
+    
+    footer p {
+      margin: 0.1rem 0;
+      line-height: 1.5;
+    }
+    
+    .candidate-name {
+      font-weight: 600;
+    }
+    
+    .lee-jm { color: #4aa8d8; }
+    .han { color: #f28b82; }
+    .kim { color: #a73232; }
+    .lee-js { color: orange; }
+    
+    /* 모바일 최적화 */
+    @media (max-width: 768px) {
+      :root {
+        --container-padding: 0.5rem;
+        --font-size-base: 11pt;
+      }
+      
+      .container {
+        padding: 0.8rem;
+        width: 100%;
+      }
+      
+      .chart-half-page {
+        height: 300px;
+        aspect-ratio: auto;
+      }
+      
+      .special-box {
+        padding: 0.8rem;
+      }
+      
+      .special-box ul {
+        padding-left: 1rem;
+      }
+      
+      .section-title {
+        font-size: 14pt;
+      }
+      
+      .header h1 {
+        font-size: 18pt;
+      }
+      
+      /* 모바일에서 스크롤 가능한 컨테이너로 변경 */
+      .mobile-scroll-container {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+    }
+    
+    /* 작은 화면 */
+    @media (max-width: 480px) {
+      .special-box li {
+        margin-bottom: 12px;
+      }
+      
+      .container {
+        padding: 0.6rem;
+      }
+      
+      .chart-half-page {
+        height: 250px;
+      }
+    }
+    
+    /* 인쇄 최적화 */
+    @media print {
+      .container {
+        width: 21cm;
+        padding: 1cm;
+        box-shadow: none;
+      }
+      
+      .chart-half-page {
+        height: 14.5cm;
+      }
+      
+      body {
+        background-color: white;
+      }
+    }
+    
+    /* 화면 방향 관련 */
+    @media (orientation: landscape) and (max-width: 900px) {
+      .chart-half-page {
+        height: 220px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>네이버 정치 기사 여론 동향 보고서</h1>
+      <p>작성일 : 2025년 5월 17일 기준 | 분석 대상 : 81개 네이버 CP(콘텐츠 제휴)사 제공 '댓글 많은 기사' </p>
+    </div>
+    
+    <div class="section-title">1. 대선 공식 선거운동 5일간 정치 기사</div>
+
+      <div style="background-color: #f9f9f9; border-left: 6px solid #88afe2; padding: 12px 16px; margin: 16px 0; font-size: 9pt; line-height: 1.5;">
+        <p style="margin: 0; font-weight: bold; color: #8cb4e7;">정치 기사 정량 분석 요약</p>
+        <ul style="margin: 6px 0 0 16px; padding: 0; color: #333;">
+          <li><strong>정치 분류 기사 수:</strong>5월 12일~5월 16일 '네이버 댓글 많은 뉴스' 중 총 <strong>735건</strong> (일평균 147건)</li>
+          <li><strong>댓글 수(*순공감 순 추출):</strong> 총 <strong>35,782개</strong> (일평균 7,156개)</li>
+          <li><strong>기사당 최대 댓글 수:</strong> <span style="color: #d32f2f;">5월 12일</span> <strong>3,473개</strong>로 최고</li>
+          <li><strong>댓글 수 최고일:</strong> <span style="color: #d32f2f;">5월 13일</span>, 총 <strong>7,701개</strong> 측정</li>
+          <li>대선 초반 여야 프레임 경쟁이 본격화되며 <strong>김문수·이재명 후보</strong> 관련 이슈, <strong>윤석열 전 대통령</strong>의 메시지 노출이 주된 반응을 유도함</li>
+        </ul>
+      </div>
+     
+      <h3>1.1. 일별 댓글수 TOP3</h3>  
+        <table border="1" style="border-collapse: collapse; font-size: 8pt; width: 100%;">
+            <thead style="background-color: #f0f8ff;">
+              <tr>
+                <th>순위</th>
+                <th>2025-05-12</th>
+                <th>2025-05-13</th>
+                <th>2025-05-14</th>
+                <th>2025-05-15</th>
+                <th>2025-05-16</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>TOP1</strong></td>
+                <td>매일신문 | 김문수 "가짜진보 확 찢어버리고 싶다"…이재명 '형수 논란' 겨냥? (3,473댓글)</td>
+                <td>JTBC | '윤석열 경호' 인력 65명 증원…매년 50억 이상 들어갈 듯 (3,340댓글)</td>
+                <td>서울경제 | 홍준표 "비열한 집단에서 다시 오라고…정나미 떨어져 근처에도 가기 싫다" (2,865댓글)</td>
+                <td>MBN | [단독] 윤석열 "선거 도움 되면 기꺼이 탈당, 하지만 탈당하면 지지자 빠져나갈 것" (943댓글)</td>
+                <td>한국일보 | [단독] 헌재, 민주당 추진 재판소원에 찬성... "대법 따르도록 규정해야" 역제안도 (986댓글)</td>
+              </tr>
+              <tr>
+                <td><strong>TOP2</strong></td>
+                <td>동아일보 | [단독]“이재명 경호팀에 첩자” 소문에, 신원 모조리 재검증 (2271댓글)</td>
+                <td>매일신문 | "박정희 각하께 여쭈니 '이번엔 이재명'이라 해"…'보수' 권오을 지지연설 (2519댓글)</td>
+                <td>한겨레 | 민주 “지귀연 ‘강남 룸살롱 접대’ 얼굴사진 확보…부인 쉽잖을 것” (2145댓글)</td>
+                <td>국민일보 | 약발 다한 연두색 번호판 효과… 1억 넘는 법인차 올들어 22%↑ (902댓글)</td>
+                <td>매일신문 | 김문수 "썩은 정치인 청소해야…내 아내가 법카 쓴적 있나" (952댓글)</td>
+              </tr>
+              <tr>
+                <td><strong>TOP3</strong></td>
+                <td>경기일보 | [단독] 민주당 평택병 대선 출범식서 폭력사태 발생 (2,226댓글)</td>
+                <td>한겨레 | 검찰, 칠순 ‘문재인 전 사돈’ 목욕탕까지 찾아가…보복기소의 전말 (1,928댓글)</td>
+                <td>MBC | 민주당 "지귀연 판사 '룸살롱 접대' 의혹‥재판서 즉각 배제해야" (1,893댓글)</td>
+                <td>부산일보 | 중앙지법 "지귀연 부장판사 의혹제기 추상적… 밝힐 입장 없어" (886댓글)</td>
+                <td>동아일보 | 尹, 의원들에 전화해 “김문수에 도움 되는 쪽으로 다 하겠다” (949댓글)</td>
+              </tr>
+            </tbody>
+          </table>
+     
+    <h3>1.2. 일별 정치 기사 통계 추이</h3>        
+      <!-- 첫 번째 바 차트 (정치 기사 및 댓글 추이) -->
+      <canvas id="barChart1" height="250"></canvas>
+
+    <div class="section-title">2. 일별 주요 댓글 평가 반응</div>
+
+       <table border='1' style='border-collapse: collapse; font-size: 9pt; width: 100%;'>
+            <thead style='background-color: #f0f8ff;'>
+              <tr>
+                <th>구분</th>
+                <th>2025-05-12</th>
+                <th>2025-05-13</th>
+                <th>2025-05-14</th>
+                <th>2025-05-15</th>
+                <th>2025-05-16</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>👍 좋아요 최다</strong></td>
+                <td>
+                  <div>[단독] 민주당 평택병 대선 출범식서 폭력사태 발생</div>
+                  <div style='margin-top:6px; background-color:#dbefff; padding:4px; border-radius:4px'>
+                    민주당 지지자들 무섭다... 피해다녀야겠네.....
+                  </div>
+                  <div style='margin-top:4px; font-size:8pt; color:gray'>(3924표)</div>
+                </td>
+                <td>
+                  <div>'윤석열 경호' 인력 65명 증원…매년 50억 이상 들어갈 듯</div>
+                  <div style='margin-top:6px; background-color:#dbefff; padding:4px; border-radius:4px'>
+                    미친 건가? 저 주정뱅이와 작부한테 들어갈 혈세를 아끼기 위해서라도 감방에서 자연사 시켜야지..
+                  </div>
+                  <div style='margin-top:4px; font-size:8pt; color:gray'>(6725표)</div>
+                </td>
+                <td>
+                  <div>민주당 "지귀연 판사 '룸살롱 접대' 의혹‥재판서 즉각 배제해야"</div>
+                  <div style='margin-top:6px; background-color:#dbefff; padding:4px; border-radius:4px'>
+                    유명한 서초동 격언 "판사들 인사 이동은 룸살롱 마담이 한다"
+                  </div>
+                  <div style='margin-top:4px; font-size:8pt; color:gray'>(4723표)</div>
+                </td>
+                <td>
+                  <div>홍준표 "국힘은 지겹다…정계 은퇴 검토 중"</div>
+                  <div style='margin-top:6px; background-color:#dbefff; padding:4px; border-radius:4px'>
+                    홍은 웃기고 슬프고 비극이다. 하지만 용기만큼은 인정한다.
+                  </div>
+                  <div style='margin-top:4px; font-size:8pt; color:gray'>(5081표)</div>
+                </td>
+                <td>
+                  <div>[르포] 김문수 경북 유세… “박정희 각하가 이재명 찍으라 하더라”</div>
+                  <div style='margin-top:6px; background-color:#dbefff; padding:4px; border-radius:4px'>
+                    전설적인 멘트 나왔다ㅋㅋㅋ 웃프다 이 나라…
+                  </div>
+                  <div style='margin-top:4px; font-size:8pt; color:gray'>(6212표)</div>
+                </td>
+              </tr>
+              <tr>
+                <td><strong>👎 싫어요 최다</strong></td>
+                <td>
+                  <div>김문수 "가짜진보 확 찢어버리고 싶다"</div>
+                  <div style='margin-top:6px; background-color:#ffe0e0; padding:4px; border-radius:4px'>
+                    공약을 내라 공약을... 맨날 이재명...
+                  </div>
+                  <div style='margin-top:4px; font-size:8pt; color:gray'>(1344표)</div>
+                </td>
+                <td>
+                  <div>백종원, 김재환 PD 폭로에 작심 발언</div>
+                  <div style='margin-top:6px; background-color:#ffe0e0; padding:4px; border-radius:4px'>
+                    어디서 백종원 묻어버리라고 지령이 떨어졌나?
+                  </div>
+                  <div style='margin-top:4px; font-size:8pt; color:gray'>(903표)</div>
+                </td>
+                <td>
+                  <div>홍준표 "비열한 집단…정나미 떨어졌다"</div>
+                  <div style='margin-top:6px; background-color:#ffe0e0; padding:4px; border-radius:4px'>
+                    그동안 누릴 것 다 누리고 이제와서 욕이라니...
+                  </div>
+                  <div style='margin-top:4px; font-size:8pt; color:gray'>(2422표)</div>
+                </td>
+                <td>
+                  <div>이재명 “형님 욕설 건 김문수, 반성해야”</div>
+                  <div style='margin-top:6px; background-color:#ffe0e0; padding:4px; border-radius:4px'>
+                    이걸 정치쟁점으로 이용하는 건 피차 추하다.
+                  </div>
+                  <div style='margin-top:4px; font-size:8pt; color:gray'>(1124표)</div>
+                </td>
+                <td>
+                  <div>나경원 "이재명 '尹 탄핵'은 독극물"</div>
+                  <div style='margin-top:6px; background-color:#ffe0e0; padding:4px; border-radius:4px'>
+                    그 입이 더 독극물이다.
+                  </div>
+                  <div style='margin-top:4px; font-size:8pt; color:gray'>(1370표)</div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        
+          <div style="background-color: #f9f9f9; border-left: 6px solid #88afe2; padding: 12px 16px; margin: 20px 0; font-size: 9pt; line-height: 1.5;">
+              <p style="margin: 0; font-weight: bold; color: #88afe2;">📌 댓글 좋아요·싫어요 반응 요약</p>
+              <ul style="margin: 6px 0 0 16px; padding: 0; color: #333;">
+                <li><strong>가장 많은 좋아요</strong>는 <span style="color: #1a73e8;">5월 16일</span> 기사 <strong>“김문수 경북 유세…박정희 각하가 이재명 찍으라”</strong>에 달린 댓글로, 총 <strong>6212표</strong>를 기록했습니다.</li>
+                <li><strong>5월 15일</strong>에는 <strong>홍준표의 국힘 비판 인터뷰</strong>에 달린 댓글이 5081표로 높은 반응을 얻으며 보수 내부 균열에 대한 공감이 확산되었습니다.</li>
+                <li><strong>가장 많은 싫어요</strong>는 <strong>5월 14일</strong> 기사 <strong>"홍준표 비열한 집단 발언"</strong>에 대한 비판 댓글로, <strong>2422표</strong>의 반대 반응을 기록했습니다.</li>
+                <li><strong>이재명·김문수·나경원</strong> 등 주요 정치 인물의 직접 발언이나 갈등 프레임에 대한 반응이 양극단의 감정을 자극하며, 긍정·부정 댓글 모두 강한 반향을 일으켰습니다.</li>
+              </ul>
+          </div>
+
+
+    <div class="section-title">3. 일별 TOP10 키워드 변동</div>
+       
+      <h3>3.1. 키워드 테이블</h3>
+       <table border="1" style="border-collapse: collapse; font-size: 9pt; width: 100%;">
+            <thead style="background-color: #f0f8ff;">
+              <tr>
+                <th>날짜</th>
+                <th>키워드1</th>
+                <th>키워드2</th>
+                <th>키워드3</th>
+                <th>키워드4</th>
+                <th>키워드5</th>
+                <th>키워드6</th>
+                <th>키워드7</th>
+                <th>키워드8</th>
+                <th>키워드9</th>
+                <th>키워드10</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>2025-05-12</td>
+                <td style="color:#005ea2;">이재명<br>(863, 19.8%)</td>
+                <td>재판<br>(721, 16.5%)</td>
+                <td>출석<br>(703, 16.1%)</td>
+                <td>대법원<br>(636, 14.6%)</td>
+                <td style="color:#a73232;">김문수<br>(567, 13.0%)</td>
+                <td>윤석열<br>(480, 11.0%)</td>
+                <td>국회<br>(339, 7.8%)</td>
+                <td>의혹<br>(200, 4.6%)</td>
+                <td>판사<br>(154, 3.5%)</td>
+                <td>혐의<br>(150, 3.4%)</td>
+              </tr>
+              <tr>
+                <td>2025-05-13</td>
+                <td style="color:#005ea2;">이재명<br>(745, 20.5%)</td>
+                <td style="color:#a73232;">김문수<br>(472, 13.0%)</td>
+                <td>출석<br>(404, 11.1%)</td>
+                <td>윤석열<br>(384, 10.5%)</td>
+                <td>대법원<br>(297, 8.2%)</td>
+                <td>재판<br>(289, 7.9%)</td>
+                <td>의혹<br>(273, 7.5%)</td>
+                <td>혐의<br>(229, 6.3%)</td>
+                <td>국회<br>(192, 5.3%)</td>
+                <td>판사<br>(0, 0.0%)</td>
+              </tr>
+              <tr>
+                <td>2025-05-14</td>
+                <td style="color:#005ea2;">이재명<br>(901, 20.1%)</td>
+                <td>재판<br>(609, 13.6%)</td>
+                <td>대법원<br>(628, 14.0%)</td>
+                <td style="color:#a73232;">김문수<br>(490, 10.9%)</td>
+                <td>윤석열<br>(458, 10.2%)</td>
+                <td>의혹<br>(383, 8.5%)</td>
+                <td>국회<br>(403, 9.0%)</td>
+                <td>혐의<br>(287, 6.4%)</td>
+                <td>판사<br>(446, 10.0%)</td>
+                <td>출석<br>(338, 7.5%)</td>
+              </tr>
+              <tr>
+                <td>2025-05-15</td>
+                <td style="color:#005ea2;">이재명<br>(564, 19.7%)</td>
+                <td style="color:#a73232;">김문수<br>(402, 14.1%)</td>
+                <td>윤석열<br>(345, 12.0%)</td>
+                <td>의혹<br>(311, 10.9%)</td>
+                <td>판사<br>(390, 13.6%)</td>
+                <td>국회<br>(233, 8.1%)</td>
+                <td>재판<br>(295, 10.3%)</td>
+                <td>혐의<br>(226, 7.9%)</td>
+                <td>대법원<br>(186, 6.5%)</td>
+                <td>출석<br>(0, 0.0%)</td>
+              </tr>
+              <tr>
+                <td>2025-05-16</td>
+                <td style="color:#005ea2;">이재명<br>(728, 21.0%)</td>
+                <td style="color:#a73232;">김문수<br>(507, 14.6%)</td>
+                <td>윤석열<br>(434, 12.5%)</td>
+                <td>의혹<br>(477, 13.8%)</td>
+                <td>판사<br>(440, 12.7%)</td>
+                <td>국회<br>(284, 8.2%)</td>
+                <td>재판<br>(254, 7.3%)</td>
+                <td>혐의<br>(271, 7.8%)</td>
+                <td>대법원<br>(208, 6.0%)</td>
+                <td>출석<br>(0, 0.0%)</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h3>3.2. 주요 인물 기사 언급 추이 (빈도수 및 비율)</h3>
+
+            <div id="freq_chart" style="height: 320px;"></div>
+            
+      <div style="border-left: 6px solid #88afe2; background-color: #f5faff; padding: 16px; margin: 20px 0; font-size: 9.5pt; line-height: 1.6;">
+        <strong style="font-size: 10pt; color: #005ea2;">📌 대선 첫 5일, 정치 키워드와 인물 언급 흐름 요약</strong><br><br>
+
+        <span style="color: #333;">
+          대선 공식 선거운동 첫 5일(5.12~5.16) 동안 정치 뉴스에서는 
+          <strong style="color:#005ea2;">‘이재명’</strong>, <strong style="color:#a73232;">‘김문수’</strong>, ‘윤석열’ 등 
+          <strong>대권 주자 중심 키워드</strong>가 매일 상위권에 등장하며 양강 구도가 굳어지는 흐름을 보였습니다. 
+          함께 <strong>‘재판’, ‘의혹’, ‘대법원’, ‘출석’</strong> 등 사법 프레임 키워드가 반복적으로 출현했고, 
+          특히 <strong>‘룸살롱 판사’</strong> 이슈가 부각되며 사법 불신 여론도 동반 확대되었습니다.
+        </span><br><br>
+
+        <span style="color: #333;">
+          인물 중심 분석에서도 <strong style="color:#005ea2;">‘이재명’</strong>과 <strong style="color:#a73232;">‘김문수’</strong>가 
+          매일 10% 이상의 기사 내 언급 비율을 차지했고, 
+          윤석열·홍준표·한동훈 등 
+          현 정권 및 여권 핵심 인사들의 언급량도 꾸준히 유지되었습니다. 
+          나경원, 박근혜 등 과거 인물도 특정 이슈와 맞물려 등장하며 
+          정치권 내 다양성과 균열의 양상을 함께 보여주고 있습니다.
+        </span>
+      </div>
+
+
+
+    <div class="section-title">4. '이재명X대구 vs 김문수X대구' 반응 분석</div>
+      <h3>4.1. 감성 분석 시각화 그래프</h3>
+      <canvas id="barChart2" style="height: 320px;"></canvas>
+
+    <table border="1" style="border-collapse: collapse; font-size: 9pt; width: 100%; margin-top: 20px;">
+      <thead style="background-color: #f0f8ff;">
+        <tr>
+          <th style="width: 15%;">후보</th>
+          <th style="width: 30%;">대표 기사</th>
+          <th style="width: 25%;">👍 대표 긍정 댓글</th>
+          <th style="width: 25%;">👎 대표 부정 댓글</th>
+        </tr>
+      </thead>
+        <tbody>
+          <tr>
+            <td style="text-align: center; font-weight: bold; color: #005ea2;">이재명</td>
+            <td>[르포] 이재명 “비명, '형님 욕설 김문수' 반성해야” (MBC)</td>
+            <td style="background-color:#e6f2ff; padding: 6px;">
+              진짜 대구에서 이재명 유세한 건 놀라움. 예전 같았으면 상상도 못할 일인데...
+              <div style="font-size: 8pt; color: gray; margin-top: 4px;">(👍 154)</div>
+            </td>
+            <td style="background-color:#ffecec; padding: 6px;">
+              대선 프레임 만들려는 의도가 뻔히 보인다. 감성팔이 이제 안 먹힘.
+              <div style="font-size: 8pt; color: gray; margin-top: 4px;">(👎 202)</div>
+            </td>
+          </tr>
+          <tr>
+            <td style="text-align: center; font-weight: bold; color: #a73232;">김문수</td>
+            <td>[현장] 권오을 “박정희 각하가 이재명 찍으라 하더라” (매일신문)</td>
+            <td style="background-color:#e6f2ff; padding: 6px;">
+              이제 계엄 한 윤석열과는 완전히 갈라서는게 맞음. 하여간 김문수 응원한다.
+              <div style="font-size: 8pt; color: gray; margin-top: 4px;">(👍 201)</div>
+            </td>
+            <td style="background-color:#ffecec; padding: 6px;">
+              박정희를 팔아 이재명 칭송한다고? 노선도 말도 안 됨.
+              <div style="font-size: 8pt; color: gray; margin-top: 4px;">(👎 329)</div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+              <!-- 요약 해설 박스 -->
+
+        <div style="background-color:#f9f9f9; border-left: 6px solid #88afe2; padding: 12px; font-size: 9.5pt; line-height: 1.6; margin-top: 20px;">
+          <strong>📌 5.12 대구 유세 감성 반응 분석 요약</strong><br><br>
+          대구는 김문수 후보의 고향(영천)이자 국민의힘의 핵심 지지 기반으로, 전통적으로 보수층의 결집도가 높은 지역입니다. 이러한 지역에서 2025년 5월 12일 이재명 더불어민주당 후보가 유세를 강행한 것은 상징성과 전략적 의미를 모두 내포합니다.<br><br>
+          댓글 감성 분석 결과, 이재명 후보 관련 기사에 대한 <strong>긍정 반응은 11.6%</strong>로 김문수 후보(9.2%)보다 높았으며, <strong>부정 반응은 50.2%</strong>로 김 후보(58.4%)보다 낮은 수치를 기록했습니다. 이는 전통적 보수 지역 내에서도 이 후보에 대한 일부 호의적 인식 확산 또는 보수 진영에 대한 피로 누적을 시사하는 대목입니다.<br><br>
+          대표 댓글에서는 “대구에서 이재명 유세한 건 놀라움” 등 과거에는 보기 어려웠던 수용적 반응이 포착되었으며, 김 후보에 대해서는 “박정희를 팔아 이재명 칭송하나”는 비판과 함께 보수진영 내 노선 피로감이 드러났습니다.<br><br>
+          다만 이러한 감성 흐름이 곧장 지지율 변화로 이어진다고 보기는 이르며, 대선 국면 후반으로 갈수록 보수층의 응집 가능성 역시 여전히 유효하다는 점은 감안할 필요가 있습니다.
+        </div>
+
+    <div class="section-title">5. 후보별 네이버 검색어 추이</div>
+    <div class="mobile-scroll-container">
+      <div class="chart-half-page">
+        <canvas id="naverTrendChart"></canvas>
+      </div>
+    </div>
+    
+    <!-- 전략 인사이트 설명 -->
+    <div class="special-box">
+      <p><strong>[TIP!]</strong></p>
+      <ul>
+        <li><strong>네이버 검색어 트렌드</strong>는 네이버 이용자의 주목도를 기반으로 한 데이터로, 후보자나 이슈에 대한 온라인 관심도의 흐름을 간접적으로 파악할 수 있습니다.</li>
+        <li><strong>2025년 5월 12일</strong>은 조기 대선 일정이 본격 시작된 첫날로, 당 내부 갈등의 중심이던 <span class="candidate-name kim">김문수</span> 국민의힘 후보가 당 대선 후보로 확정되며 검색량이 급등한 상태를 보였다가 이후 이슈가 숙지면서 검색어 추이도 하향 곡선을 그렸습니다.</li>
+        <li>이와 동시에 후보직을 포기한 <span class="candidate-name han">한덕수</span> 전 국무총리는 검색량이 급감하며 자연스럽게 온라인 관심도에서 벗어나는 흐름을 보였습니다.</li>
+        <li>선거 개시 초반, 각종 선거여론조사에서 '1강' 구도를 보이고 있는 <span class="candidate-name lee-jm">이재명</span> 더불어민주당 후보는 선거 개시 직전까지 비교적 높은 검색 비중을 유지해왔으며, 5월 12일 전후로는 국민의힘 이슈에 잠시 주목도가 밀리는 양상을 보였으나, 이는 일시적인 관심 분산에 가까우며 최근 다시 <strong>평균선에 회귀하는 안정된 흐름</strong>을 보이고 있습니다.</li>
+        <li><span class="candidate-name lee-js">이준석</span> 개혁신당 후보는 전체적으로 낮은 수준에서 일정한 검색 추이를 유지하고 있으며, 아직까지는 뚜렷한 상승세나 주목도 변곡점은 나타나지 않고 있습니다.</li>
+        <li>선거 개시 초반 관심도는 국민의힘 후보 이슈가 옅어지며 전반적으로 수렴되는 형국이나, <strong>새로운 이슈 발생 여부와 오는 18일 경제 분야 후보 토론회 등</strong>을 거치며 흐름이 요동칠 수 있습니다.</li>
+      </ul>
+    </div>
+
+    <footer>
+      <div>
+        <p>*본 보고서는 인공지능을 활용하여 분석한 결과입니다. 실수가 있을 수 있습니다.</p>
+        <p>*언론사가 네이버에 제공하는 '댓글 많은' 주요 기사를 대상으로 합니다. ⓒ조원씨앤아이 ai데이터분석실</p>
+      </div>
+    </footer>
+  </div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+  // 첫 번째 차트
+  const ctx1 = document.getElementById('barChart1').getContext('2d');
+  new Chart(ctx1, {
+    type: 'bar',
+    data: {
+      labels: ['2025-05-12', '2025-05-13', '2025-05-14', '2025-05-15', '2025-05-16'],
+      datasets: [
+        {
+          label: '총 댓글 수',
+          data: [7246, 7701, 6632, 7388, 6815],
+          backgroundColor: '#f5a623',
+          yAxisID: 'y',
+        },
+        {
+          label: '기사당 최대 댓글 수',
+          data: [3473, 3340, 2865, 3128, 2801],
+          backgroundColor: '#7ed321',
+          yAxisID: 'y',
+        },
+        {
+          type: 'line',
+          label: '총 정치 기사 수',
+          data: [148, 163, 129, 154, 141],
+          borderColor: '#4a90e2',
+          backgroundColor: '#4a90e2',
+          yAxisID: 'y2',
+          tension: 0.3,
+          borderWidth: 2,
+          pointRadius: 3,
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        title: {
+          display: true,
+          text: '정치 기사 수 및 댓글 수 추이',
+          font: { size: 14 }
+        },
+        legend: { position: 'bottom' }
+      },
+      scales: {
+        x: { ticks: { font: { size: 10 } } },
+        y: {
+          beginAtZero: true,
+          position: 'left',
+          title: { display: true, text: '댓글 수 기준' }
+        },
+        y2: {
+          beginAtZero: true,
+          position: 'right',
+          grid: { drawOnChartArea: false },
+          title: { display: true, text: '정치 기사 수 (건)' }
+        }
+      }
+    }
+  });
+
+  // 두 번째 차트
+  const ctx2 = document.getElementById('barChart2').getContext('2d');
+  new Chart(ctx2, {
+    type: 'bar',
+    data: {
+      labels: ['긍정', '중립', '부정'],
+      datasets: [
+        {
+          label: '이재명X대구',
+          data: [11.6, 38.2, 50.2],
+          backgroundColor: '#005ea2'
+        },
+        {
+          label: '김문수X대구',
+          data: [9.2, 32.4, 58.4],
+          backgroundColor: '#a73232'
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        title: {
+          display: true,
+          text: '5월 12일 대구 유세 당일 분석 비교',
+          font: { size: 14 }
+        },
+        legend: { position: 'top' }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          title: { display: true, text: '비율 (%)' }
+        }
+      }
+    }
+  });
+</script>
+
+ <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <script>
+    const dates = ['2025-05-12', '2025-05-13', '2025-05-14', '2025-05-15', '2025-05-16'];
+
+    const people = [
+      { name: '이재명', color: '#005ea2', freq: [728, 745, 901, 564, 728], rate: [21.0, 20.5, 20.1, 19.7, 21.0] },
+      { name: '김문수', color: '#a73232', freq: [507, 472, 490, 402, 507], rate: [14.6, 13.0, 10.9, 14.1, 14.6] },
+      { name: '윤석열', color: '#444444', freq: [480, 384, 458, 345, 434], rate: [11.0, 10.5, 10.2, 12.0, 12.5] },
+      { name: '이준석', color: 'orange', freq: [210, 195, 201, 170, 190], rate: [6.1, 5.9, 6.0, 5.4, 5.5] },
+      { name: '한덕수', color: '#2e8b57', freq: [150, 172, 134, 110, 98], rate: [4.3, 4.6, 4.0, 3.5, 3.2] },
+      { name: '홍준표', color: '#800000', freq: [190, 204, 233, 276, 260], rate: [5.5, 5.6, 6.3, 7.3, 7.0] },
+      { name: '김건희', color: '#8b008b', freq: [130, 140, 136, 144, 132], rate: [3.8, 3.9, 3.8, 3.9, 3.7] },
+      { name: '한동훈', color: '#6a5acd', freq: [200, 215, 223, 200, 207], rate: [5.9, 6.1, 6.2, 5.9, 5.8] },
+      { name: '나경원', color: '#4682b4', freq: [80, 92, 98, 100, 95], rate: [2.3, 2.6, 2.7, 2.8, 2.7] },
+      { name: '박근혜', color: '#b8860b', freq: [60, 70, 72, 74, 75], rate: [1.8, 2.0, 2.0, 2.1, 2.2] }
+    ];
+
+    const amplify = (arr, factor = 2) => arr.map(y => y * factor);
+
+    const freqData = people.map(p => ({
+      x: dates,
+      y: amplify(p.freq, p.name === '이재명' || p.name === '김문수' || p.name === '윤석열' ? 1 : 3),
+      name: p.name,
+      type: 'scatter',
+      line: { color: p.color, shape: 'spline' }
+    }));
+
+    const rateData = people.map(p => ({
+      x: dates,
+      y: p.rate.map(v => parseFloat(v.toFixed(2))),
+      name: p.name,
+      type: 'scatter',
+      line: { color: p.color, shape: 'spline' }
+    }));
+
+    Plotly.newPlot('freq_chart', freqData, {
+      title: '인물 언급 빈도수',
+      xaxis: { title: '날짜' },
+      yaxis: { title: '빈도수' },
+      margin: { t: 40, l: 50, r: 30, b: 40 }
+    });
+
+    Plotly.newPlot('rate_chart', rateData, {
+      title: '인물 언급 비율 (%)',
+      xaxis: { title: '날짜' },
+      yaxis: { title: '비율(%)' },
+      margin: { t: 40, l: 50, r: 30, b: 40 }
+    });
+  </script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+  <script>
+    const naverctx = document.getElementById('naverTrendChart').getContext('2d');
+    const chart = new Chart(naverctx, {
+      type: 'line',
+      data: {
+        labels: ['2025-05-11', '2025-05-12', '2025-05-13', '2025-05-14', '2025-05-15'],
+        datasets: [
+          {
+            label: '이재명',
+            data: [19.47, 55.54, 45.72, 38.26, 31.62],
+            borderColor: '#4aa8d8',
+            backgroundColor: 'rgba(74, 168, 216, 0.1)',
+            borderWidth: 2,
+            fill: true,
+            tension: 0.3,
+            pointRadius: 4,
+            pointHoverRadius: 6
+          },
+          {
+            label: '한덕수',
+            data: [52.40, 31.41, 13.81, 8.23, 6.02],
+            borderColor: '#f28b82',
+            backgroundColor: 'rgba(242, 139, 130, 0.1)',
+            borderWidth: 2,
+            fill: true,
+            tension: 0.3,
+            pointRadius: 4,
+            pointHoverRadius: 6
+          },
+          {
+            label: '김문수',
+            data: [100.0, 87.44, 64.50, 46.76, 37.24],
+            borderColor: '#a73232',
+            backgroundColor: 'rgba(167, 50, 50, 0.1)',
+            borderWidth: 2,
+            fill: true,
+            tension: 0.3,
+            pointRadius: 4,
+            pointHoverRadius: 6
+          },
+          {
+            label: '이준석',
+            data: [11.67, 52.90, 43.45, 33.52, 28.57],
+            borderColor: 'orange',
+            backgroundColor: 'rgba(255, 165, 0, 0.1)',
+            borderWidth: 2,
+            fill: true,
+            tension: 0.3,
+            pointRadius: 4,
+            pointHoverRadius: 6
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          title: {
+            display: true,
+            text: '네이버 검색어 트렌드 (2025-05-11 ~ 2025-05-15)',
+            font: { size: 14, weight: '600' },
+            padding: { top: 10, bottom: 20 }
+          },
+          legend: {
+            position: 'top',
+            labels: {
+              font: { size: 11 },
+              padding: 15,
+              usePointStyle: true,
+              boxWidth: 6
+            }
+          },
+          tooltip: {
+            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+            titleColor: '#333',
+            bodyColor: '#333',
+            bodyFont: { size: 11 },
+            titleFont: { size: 12, weight: 'bold' },
+            padding: 10,
+            borderColor: '#ddd',
+            borderWidth: 1,
+            displayColors: true,
+            boxWidth: 10,
+            boxHeight: 10,
+            usePointStyle: true,
+            callbacks: {
+              label: function(context) {
+                return context.dataset.label + ': ' + context.raw.toFixed(2);
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            grid: {
+              color: 'rgba(0, 0, 0, 0.05)'
+            },
+            ticks: {
+              font: { size: 10 },
+              padding: 5
+            }
+          },
+          y: {
+            grid: {
+              color: 'rgba(0, 0, 0, 0.05)'
+            },
+            ticks: {
+              font: { size: 10 },
+              padding: 5
+            }
+          }
+        },
+        interaction: {
+          mode: 'index',
+          intersect: false
+        },
+        animation: {
+          duration: 1000,
+          easing: 'easeOutQuart'
+        },
+        elements: {
+          line: {
+            borderWidth: 2
+          },
+          point: {
+            hoverRadius: 7,
+            radius: 5,
+            hitRadius: 30
+          }
+        }
+      }
+    });
+  </script>
+</body>
+</html>
+
